@@ -1,3 +1,4 @@
+import h5py
 import numpy as np
 from numpy.typing import NDArray
 
@@ -100,6 +101,17 @@ def gwtc3_mf(mass: ArrayLike) -> ArrayLike:
 
     mixed_model = (1 - lambda_peak) * power_law + lambda_peak * gaussian
     return mixed_model * smoothing * mass
+
+
+with h5py.File("./AllCBC_FullPop.h5", "r") as f:
+    gwtc4_mass_grid = f["posterior"]["rates_on_grids"]["primary_mass"]["positions"][0]
+    gwtc4_rates = f["posterior"]["rates_on_grids"]["primary_mass"]["rates"][:]
+    gwtc4_median_rate = np.median(gwtc4_rates, axis=0)
+    gwtc4_median_rate /= np.trapz(gwtc4_median_rate, x=np.log(gwtc4_mass_grid))
+
+
+def gwtc4_all(mass):
+    return np.interp(mass, gwtc4_mass_grid, gwtc4_median_rate) * mass
 
 
 if __name__ == "__main__":
