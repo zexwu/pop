@@ -1,1 +1,5 @@
 gwtc4
+*.res
+bulge.*
+disk.*
+plot

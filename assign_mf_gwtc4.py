@@ -15,8 +15,7 @@ days_per_year = u.year.to(u.day)
 
 # mass boundaries for object types
 wd_min, wd_max = 1, 8
-ns_min, ns_max = 8, 20
-bh_min, bh_max = 20, 100
+rem_min, rem_max = 8, 100
 
 wd_mean, wd_std = 0.60, 0.16  # White Dwarfs
 ns_mean, ns_std = 1.35, 0.04  # Neutron Stars
@@ -43,24 +42,21 @@ mf = chabrier03_imf(mass)
 stype = np.zeros(num_samples, dtype=int)
 
 is_wd = (mass >= wd_min) & (mass < wd_max)
-is_ns = (mass >= ns_min) & (mass < ns_max)
-is_bh = (mass >= bh_min) & (mass < bh_max)
+is_rem = (mass >= rem_min) & (mass < rem_max)
 
 stype[is_wd] = 1
-stype[is_ns] = 2
-stype[is_bh] = 3
+stype[is_rem] = 2
 
 # fmt: off
 mass[is_wd] = truncnorm.rvs(-3.5, 3.5, loc=wd_mean, scale=wd_std, size=num_samples, random_state=1)[is_wd]
-mass[is_ns] = truncnorm.rvs(-5, 5, loc=ns_mean, scale=ns_std, size=num_samples, random_state=2)[is_ns]
 # fmt: on
 
 # sample BH mass from GWTC-3 mf
-logm_bh_grid = np.linspace(np.log10(5), np.log10(90), 1001)
+logm_bh_grid = np.linspace(np.log10(1), np.log10(100), 1001)
 cdf = np.cumsum(gwtc3_mf(10**logm_bh_grid))
 cdf = (cdf - cdf[0]) / (cdf[-1] - cdf[0])
 rd = np.random.rand(num_samples)
-mass[is_bh] = 10 ** np.interp(rd, cdf, logm_bh_grid)[is_bh]
+mass[is_rem] = 10 ** np.interp(rd, cdf, logm_bh_grid)[is_rem]
 
 # random directions
 cth = np.random.uniform(-1, 1, num_samples)
@@ -69,23 +65,15 @@ phi = np.random.uniform(0, 2 * np.pi, num_samples)
 kick_dir_x = sth * np.cos(phi)
 kick_dir_y = sth * np.sin(phi)
 
-# apply BH kicks
-sigma_bh = args.kick / np.sqrt(8 / np.pi)
-v_bh_components = np.random.normal(0.0, sigma_bh, (num_samples, 3))
-v_bh_speed = np.sqrt(np.sum(v_bh_components**2, axis=1))
-pm_y[is_bh] += (v_bh_speed * kick_dir_x / dl * k_pm)[is_bh]
-pm_z[is_bh] += (v_bh_speed * kick_dir_y / dl * k_pm)[is_bh]
-vl_y[is_bh] += (v_bh_speed * kick_dir_x)[is_bh]
-vl_z[is_bh] += (v_bh_speed * kick_dir_y)[is_bh]
 
 # apply NS kicks
-sigma_ns = 217  # km/s
+sigma_ns = 100 # km/s
 v_ns_components = np.random.normal(0.0, sigma_ns, (num_samples, 3))
 v_ns_speed = np.sqrt(np.sum(v_ns_components**2, axis=1))
-pm_y[is_ns] += (v_ns_speed * kick_dir_x / dl * k_pm)[is_ns]
-pm_z[is_ns] += (v_ns_speed * kick_dir_y / dl * k_pm)[is_ns]
-vl_y[is_ns] += (v_ns_speed * kick_dir_x)[is_ns]
-vl_z[is_ns] += (v_ns_speed * kick_dir_y)[is_ns]
+pm_y[is_rem] += (v_ns_speed * kick_dir_x / dl * k_pm)[is_rem]
+pm_z[is_rem] += (v_ns_speed * kick_dir_y / dl * k_pm)[is_rem]
+vl_y[is_rem] += (v_ns_speed * kick_dir_x)[is_rem]
+vl_z[is_rem] += (v_ns_speed * kick_dir_y)[is_rem]
 
 # observables
 pi_rel = 1 / dl - 1 / ds

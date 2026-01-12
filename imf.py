@@ -103,7 +103,7 @@ def gwtc3_mf(mass: ArrayLike) -> ArrayLike:
     return mixed_model * smoothing * mass
 
 
-with h5py.File("./AllCBC_FullPop.h5", "r") as f:
+with h5py.File("./gwtc4/AllCBC_FullPop.h5", "r") as f:
     gwtc4_mass_grid = f["posterior"]["rates_on_grids"]["primary_mass"]["positions"][0]
     gwtc4_rates = f["posterior"]["rates_on_grids"]["primary_mass"]["rates"][:]
     gwtc4_median_rate = np.median(gwtc4_rates, axis=0)
